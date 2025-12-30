@@ -213,7 +213,10 @@ A GitHub Actions CI/CD pipeline is provided to:
 
 ## 12. Acknowledgments
 
-- Spotify Research — Million Playlist Dataset  
-- Databricks — Unified analytics platform  
+- **Spotify Research** for providing the Million Playlist Dataset (MPD)
+- **Databricks** for the unified analytics and Spark execution platform
+- **Amazon Web Services (AWS S3)** for reliable object storage used to host
+  the full uncompressed Spotify MPD raw JSON dataset and enable scalable
+  cloud-based ingestion
 
 ---
