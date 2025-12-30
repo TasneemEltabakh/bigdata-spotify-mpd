@@ -1,0 +1,29 @@
+services:
+  streamlit-dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: spotify-analytics-dashboard
+    ports:
+      - "8505:8501"
+    environment:
+      - DATABRICKS_SERVER_HOSTNAME=${DATABRICKS_SERVER_HOSTNAME}
+      - DATABRICKS_HTTP_PATH=${DATABRICKS_HTTP_PATH}
+      - DATABRICKS_TOKEN=${DATABRICKS_TOKEN}
+    env_file:
+      - .env
+    volumes:
+      # Mount code for development (comment out for production)
+      - ./app.py:/app/app.py
+      - ./db.py:/app/db.py
+      - ./queries.py:/app/queries.py
+      - ./ui.py:/app/ui.py
+      - ./pages:/app/pages
+      - ./assets:/app/assets
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8501/_stcore/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
