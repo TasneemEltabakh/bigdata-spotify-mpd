@@ -38,8 +38,8 @@ The primary focus of this work is not only analytics, but also:
 
 Due to Databricks Free Edition limitations, the dataset was:
 
-- Unzipped externally  
-- Uploaded once to Amazon S3 as immutable raw data  
+- Kaggle data downloaded
+- Uploaded once to Amazon S3 from Kaggle using terminal 
 - Read directly by Spark using multiline JSON ingestion  
 
 ---
