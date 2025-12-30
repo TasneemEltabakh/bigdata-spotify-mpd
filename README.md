@@ -46,36 +46,21 @@ Due to Databricks Free Edition limitations, the dataset was:
 
 ## 3. System Architecture (End-to-End)
 
-The platform follows a **Medallion Architecture** with a clear separation between ingestion, processing, storage, and consumption layers.
 
-### System Block Diagram
+The project follows a **Medallion Architecture** that clearly separates
+data ingestion, processing, storage, and consumption layers.
 
-```
-Spotify MPD (Raw JSON Files)
-           |
-           v
- Amazon S3 (Raw Storage)
-           |
-           v
- Bronze Delta Tables
-           |
-           v
- Silver Delta Tables
- (Cleaned & Normalized)
-           |
-           v
- Gold Delta Tables
- (Star Schema + KPIs)
-           |
-           v
- Databricks SQL Warehouse
-           |
-           v
- Streamlit Analytics Dashboard
-           |
-           v
- Bonus ML Recommender System
-```
+![End-to-End Big Data Pipeline](Documentation/Schemas/End-to-EndPipelineDiagram.png)
+
+**Architecture highlights:**
+- **Source**: Spotify Million Playlist Dataset (raw JSON stored on Amazon S3)
+- **Processing**: Apache Spark running on Databricks
+- **Storage**: Delta Lake tables organized as Bronze, Silver, and Gold layers
+- **Consumption**: Databricks SQL Warehouse serving a Streamlit dashboard
+
+This design minimizes recomputation, improves reliability, and enables
+both analytics and machine learning workloads on the same data foundation.
+
 
 This architecture ensures:
 
@@ -88,40 +73,23 @@ This architecture ensures:
 
 ## 4. Gold Layer Star Schema
 
-The Gold layer is modeled using a **star schema** optimized for analytical workloads.
+The Gold layer is modeled using a **star schema** optimized for large-scale
+playlist–track analytics.
 
-### Star Schema Diagram
+![Gold Layer Star Schema](Documentation/Schemas/StarSchema.png)
 
-```
-                dim_artist
-                    |
-                    |
-              +-----+-----+
-              |           |
-        dim_track     dim_playlist
-              \           //
-               \         //
-                \       //
-             fact_playlist_track
-```
+**Schema design details:**
+- **Fact table**: `fact_playlist_track`
+  - Grain: one track occurrence in a playlist
+  - Keys: `playlist_id`, `track_uri`, `track_position`
+  - Measures: `track_position`, `duration_ms`
+- **Dimensions**:
+  - `dim_playlist`: playlist metadata and attributes
+  - `dim_track`: track identifiers and titles
+  - `dim_artist`: artist-level information
 
-### Fact Table
-
-**fact_playlist_track**  
-- Grain: one track occurrence in one playlist  
-- Primary Key:
-  - playlist_id  
-  - track_uri  
-  - track_position  
-- Measures:
-  - duration_ms  
-  - track_position  
-
-### Dimension Tables
-
-- **dim_playlist**: playlist metadata, followers, sizes, timestamps  
-- **dim_track**: unique track identifiers and titles  
-- **dim_artist**: artist-level attributes  
+The artist dimension is intentionally **unlinked** from the fact table to
+avoid expensive joins and improve performance at scale.
 
 The schema minimizes join complexity, supports aggregation-heavy analytics, and enables machine learning use cases without redesign.
 
