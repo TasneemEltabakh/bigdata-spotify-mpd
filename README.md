@@ -145,6 +145,9 @@ https://bigdata-spotify-mpd-hcvgyjweudpvaqiubgrkrd.streamlit.app/
 
 An optional playlist continuation recommender system is implemented on top of the Gold layer.
 
+🔗 **Recommender system  URL:**  
+https://spotify-playlist-recommender.streamlit.app/ 
+
 **Key features:**
 
 - Reuses the existing star schema  
