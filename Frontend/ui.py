@@ -1,52 +1,66 @@
 import streamlit as st
 import streamlit.components.v1 as components
 import base64
+import os
+import base64
+import streamlit as st
+
 # =====================================================
 # GLOBAL SPOTIFY UI + SIDEBAR (SPOTIFY-STYLE)
 # =====================================================
 def apply_spotify_ui():
+    # -----------------------------
+    # Resolve absolute path safely
+    # -----------------------------
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    logo_path = os.path.join(BASE_DIR, "assets", "spotify_logo.png")
+
+    logo_base64 = base64.b64encode(
+        open(logo_path, "rb").read()
+    ).decode()
+
     st.markdown(
-        """
+        f"""
         <style>
         /* =====================
            GLOBAL
         ===================== */
-        html, body {
+        html, body {{
             background-color: #121212;
             font-family: Inter, system-ui, sans-serif;
-        }
+        }}
 
         /* =====================
            SIDEBAR BASE
         ===================== */
-        section[data-testid="stSidebar"] {
+        section[data-testid="stSidebar"] {{
             background-color: #000000;
             border-right: 1px solid #1f1f1f;
             position: relative;
-        }
+        }}
 
         /* =====================
-           LOGO AT VERY TOP (CSS)
+           LOGO AT VERY TOP
         ===================== */
-        section[data-testid="stSidebar"]::before {
+        section[data-testid="stSidebar"]::before {{
             content: "";
             display: block;
             height: 110px;
-            background-image: url("data:image/png;base64,REPLACE_LOGO_BASE64");
+            background-image: url("data:image/png;base64,{logo_base64}");
             background-repeat: no-repeat;
             background-position: center 40px;
             background-size: 75px 75px;
-        }
+        }}
 
         /* Push menu BELOW logo */
-        section[data-testid="stSidebar"] .stSidebarContent {
+        section[data-testid="stSidebar"] .stSidebarContent {{
             padding-top: 20px !important;
-        }
+        }}
 
         /* =====================
            SIDEBAR LINKS
         ===================== */
-        section[data-testid="stSidebar"] a {
+        section[data-testid="stSidebar"] a {{
             padding: 10px 14px;
             border-radius: 999px;
             margin: 2px 10px;
@@ -57,20 +71,20 @@ def apply_spotify_ui():
             font-weight: 500;
             text-decoration: none;
             position: relative;
-        }
+        }}
 
-        section[data-testid="stSidebar"] a:hover {
+        section[data-testid="stSidebar"] a:hover {{
             background-color: #1a1a1a;
             color: #1DB954;
-        }
+        }}
 
-        section[data-testid="stSidebar"] a[aria-current="page"] {
+        section[data-testid="stSidebar"] a[aria-current="page"] {{
             background-color: rgba(29, 185, 84, 0.12);
             color: #1DB954;
             font-weight: 700;
-        }
+        }}
 
-        section[data-testid="stSidebar"] a[aria-current="page"]::before {
+        section[data-testid="stSidebar"] a[aria-current="page"]::before {{
             content: "";
             position: absolute;
             left: -6px;
@@ -78,15 +92,11 @@ def apply_spotify_ui():
             height: 60%;
             background-color: #1DB954;
             border-radius: 4px;
-        }
+        }}
         </style>
-        """.replace(
-            "REPLACE_LOGO_BASE64",
-            base64.b64encode(open("assets/spotify_logo.png", "rb").read()).decode()
-        ),
+        """,
         unsafe_allow_html=True
     )
-
 
 
 # =====================================================
