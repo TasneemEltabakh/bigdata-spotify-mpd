@@ -1,106 +1,231 @@
-# Big Data Analytics Project — Spotify Million Playlist Dataset (MPD)
 
-## Project Overview
+Big Data Analytics Project — Spotify Million Playlist Dataset (MPD)
+==================================================================
 
-This project implements a comprehensive big data analytics pipeline for analyzing the Spotify Million Playlist Dataset (MPD) using Databricks and PySpark. The goal is to demonstrate scalable data processing techniques including data storage, cleaning, exploratory data analysis, and ETL pipeline development.
+End-to-End Big Data Architecture, Analytics Platform & Recommendation System
 
-## Dataset
+==================================================================
+1. PROJECT DESCRIPTION
+==================================================================
+This repository contains a complete, production-style big data analytics
+platform built on the Spotify Million Playlist Dataset (MPD). The project
+implements a scalable data engineering pipeline, analytical data warehouse,
+interactive dashboard, and a bonus recommendation system.
 
-### Spotify Million Playlist Dataset (MPD)
+The focus of this project is not only analytics, but also:
+- Real-world cloud constraints handling
+- Scalable architecture design
+- Data governance and reliability
+- Deployment-ready engineering practices
 
-The Spotify Million Playlist Dataset contains **1 million playlists** created by Spotify users, featuring:
+==================================================================
+2. DATASET OVERVIEW
+==================================================================
+Dataset: Spotify Million Playlist Dataset (MPD)
 
-- **1,000,000** unique playlists
-- **66+ million** unique tracks
-- **295,860** unique artists
-- **734,684** unique albums
+Key characteristics:
+- ~1,000,000 playlists
+- ~2.2M unique tracks
+- ~295K unique artists
+- Tens of millions of playlist–track interactions after normalization
 
-Each playlist includes:
-- Playlist metadata (name, number of tracks, number of followers, collaborative status)
-- Track information (track URI, name, artist, album, duration)
-- Position of each track within the playlist
+Storage details:
+- Original ZIP size: ~5.5 GB
+- Uncompressed size: ~32–34 GB
+- 1000 multi-line JSON files
 
-**Note**: The dataset is not included in this repository due to its size. Download it from the [Spotify Million Playlist Dataset Challenge](https://www.aicrowd.com/challenges/spotify-million-playlist-dataset-challenge).
+Due to Databricks Free Edition limitations, the dataset was:
+- Unzipped externally
+- Uploaded once to Amazon S3 as immutable raw data
+- Read directly by Spark using multiline JSON ingestion
 
-## Project Structure
+==================================================================
+3. SYSTEM ARCHITECTURE (END-TO-END)
+==================================================================
+The platform follows a Medallion Architecture with a clear separation
+between ingestion, processing, storage, and consumption layers.
 
-```
-bigdata-spotify-mpd/
-├── notebooks/                    # Databricks notebooks
-│   ├── 01_data_storage.py       # Data ingestion and storage
-│   ├── 02_data_cleaning_eda.py  # Data cleaning and EDA
-│   └── 03_etl_pipeline.py       # ETL pipeline implementation
-├── docs/                         # Documentation
-│   └── report.tex               # LaTeX project report
-├── data/                         # Data directory (empty)
-│   └── .gitkeep
-├── .gitignore
-├── LICENSE
-└── README.md
-```
+-------------------- SYSTEM BLOCK DIAGRAM --------------------
 
-## Notebooks
+   Spotify MPD (Raw JSON Files)
+              |
+              v
+     Amazon S3 (Raw Storage)
+              |
+              v
+     Bronze Delta Tables
+              |
+              v
+     Silver Delta Tables
+     (Cleaned & Normalized)
+              |
+              v
+     Gold Delta Tables
+     (Star Schema + KPIs)
+              |
+              v
+     Databricks SQL Warehouse
+              |
+              v
+     Streamlit Analytics Dashboard
+              |
+              v
+     Bonus ML Recommender System
 
-### 1. Data Storage (`01_data_storage.py`)
-- Load raw JSON data from the Spotify MPD
-- Store data in Delta Lake format for efficient querying
-- Verify data integrity after storage
+--------------------------------------------------------------
 
-### 2. Data Cleaning & EDA (`02_data_cleaning_eda.py`)
-- Assess data quality (missing values, duplicates)
-- Clean and transform data
-- Exploratory analysis:
-  - Playlist statistics
-  - Track analysis
-  - Artist analysis
-  - Album analysis
+This architecture ensures:
+- Scalability for large datasets
+- Minimal recomputation
+- Clear governance boundaries
+- Analytics and ML reuse
 
-### 3. ETL Pipeline (`03_etl_pipeline.py`)
-- **Extract**: Load data from Delta Lake
-- **Transform**: Create dimension and fact tables
-  - `dim_playlists`: Playlist dimension
-  - `dim_tracks`: Track dimension
-  - `dim_artists`: Artist dimension
-  - `dim_albums`: Album dimension
-  - `fact_playlist_tracks`: Playlist-Track associations
-- **Load**: Write to Delta Lake data warehouse
+==================================================================
+4. GOLD LAYER STAR SCHEMA
+==================================================================
+The Gold layer is modeled using a star schema optimized for analytics.
 
-## Technologies
+-------------------- STAR SCHEMA --------------------
 
-- **[Databricks](https://databricks.com/)**: Unified analytics platform
-- **[Apache Spark](https://spark.apache.org/)**: Distributed computing framework
-- **[PySpark](https://spark.apache.org/docs/latest/api/python/)**: Python API for Spark
-- **[Delta Lake](https://delta.io/)**: Open-source storage layer for data lakes
+                dim_artist
+                    |
+                    |
+              +-----+-----+
+              |           |
+        dim_track     dim_playlist
+              \           //
+               \         //
+                \       //
+             fact_playlist_track
 
-## Getting Started
+--------------------------------------------------
 
-### Prerequisites
+Fact Table:
+- fact_playlist_track
+  Grain: One track occurrence in one playlist
+  Primary Key:
+    - playlist_id
+    - track_uri
+    - track_position
+  Measures:
+    - duration_ms
+    - track_position
 
-1. Databricks workspace access
-2. Spotify Million Playlist Dataset downloaded
-3. Data uploaded to cloud storage (DBFS, S3, Azure Blob, etc.)
+Dimension Tables:
+- dim_playlist  : playlist metadata, followers, sizes, timestamps
+- dim_track     : track identifiers and titles
+- dim_artist    : artist-level attributes
 
-### Setup
+The schema is designed to:
+- Minimize join complexity
+- Support aggregation-heavy analytics
+- Enable ML use cases without redesign
 
-1. Clone this repository
-2. Import notebooks into your Databricks workspace
-3. Update file paths in notebooks to match your data location
-4. Run notebooks in sequence: `01_data_storage` → `02_data_cleaning_eda` → `03_etl_pipeline`
+==================================================================
+5. DATA PROCESSING PIPELINE
+==================================================================
+Phase 1 — Data Storage, Cleaning & EDA
+- Ingest raw JSON from S3 into Bronze Delta tables
+- Flatten nested playlist and track structures
+- Clean invalid records and duplicates
+- Perform exploratory data analysis
 
-## Deliverables
+Phase 2 — Analytical Modeling
+- Design and implement Gold-layer star schema
+- Persist fact and dimension tables
+- Validate referential integrity
 
-- [ ] Data storage implementation in Delta Lake
-- [ ] Cleaned dataset with quality documentation
-- [ ] Exploratory Data Analysis with visualizations
-- [ ] Star schema data warehouse
-- [ ] ETL pipeline for data transformation
-- [ ] LaTeX report documenting methodology and findings
+Phase 3 — Optimization & Governance
+- Persist Silver and Gold tables to avoid recomputation
+- Handle Databricks rate limits and credit exhaustion
+- Secure access using IAM roles and access tokens
+- Serve analytics via SQL Warehouse
 
-## License
+==================================================================
+6. DASHBOARD
+==================================================================
+A production-style Streamlit dashboard is deployed and publicly accessible.
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+Dashboard URL:
+https://bigdata-spotify-mpd-hcvgyjweudpvaqiubgrkrd.streamlit.app/
 
-## Acknowledgments
+Dashboard characteristics:
+- Self-explanatory storytelling design
+- General-to-specific analytical flow
+- Read-only access to Gold tables
+- Optimized for Databricks Free Edition limits
 
-- [Spotify Research](https://research.spotify.com/) for providing the Million Playlist Dataset
-- [Databricks](https://databricks.com/) for the unified analytics platform
+Main sections:
+- Executive Overview & KPIs
+- Data Health Monitoring
+- Playlist-Level Analysis
+- Content Analysis
+- User Engagement Insights
+- Creator-Level Insights
+
+==================================================================
+7. BONUS: PLAYLIST CONTINUATION RECOMMENDER
+==================================================================
+An optional recommender system is implemented on top of the Gold layer.
+
+Features:
+- Reuses existing star schema
+- Popularity-based baseline model
+- Item-to-item co-occurrence model
+- Evaluated using ranking metrics:
+  Precision@K, Recall@K, NDCG@K
+
+This demonstrates a seamless transition from analytics to ML.
+
+==================================================================
+8. CONTAINERIZATION & DEPLOYMENT
+==================================================================
+All components are fully containerized.
+
+Deployment artifacts:
+- Dockerfile
+- docker-compose.yml
+
+Benefits:
+- One-command startup
+- Environment consistency
+- Easy local or cloud deployment
+
+==================================================================
+9. CI/CD PIPELINE
+==================================================================
+A GitHub Actions CI/CD pipeline is provided to:
+- Build Docker images
+- Validate configurations
+- Support automated deployments
+
+==================================================================
+10. REPOSITORY STRUCTURE
+==================================================================
+.
+├── Backend/                Backend services and data access logic
+├── Frontend/               Streamlit dashboard
+├── Documentation/          Reports, diagrams, presentations
+├── data/                   Configuration and metadata
+├── docker-compose.yml      Service orchestration
+├── Dockerfile              Container definition
+├── .github/workflows/      CI/CD pipelines
+├── README.txt              Project documentation
+└── LICENSE
+
+==================================================================
+11. AUTHORS
+==================================================================
+Tasneem Muhammad
+Nada Nabil
+Rghda Salah
+
+==================================================================
+12. ACKNOWLEDGMENTS
+==================================================================
+Spotify Research — Million Playlist Dataset
+Databricks — Unified analytics platform
+
+==================================================================
+END OF DOCUMENTATION
+==================================================================
